@@ -32,7 +32,7 @@ Act9v4/
 └── shared/
     └── message_schema.xml    # Esquema XML para la validación de mensajes
 ```
-#INICIAR SERVIDOR
+# INICIAR SERVIDOR
 ```
 $ node server/server_file.js
 ```
