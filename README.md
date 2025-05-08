@@ -8,6 +8,7 @@ Es necesario instalar las siguientes librerías mediante el siguiente comando 'n
 $ npm install express http ws xml2js uuid fast-xml-parser
 ```
 # ESTRUCTURA
+```
 Act9v4/
 │
 ├── server/
@@ -30,7 +31,7 @@ Act9v4/
 │
 └── shared/
     └── message_schema.xml    # Esquema XML para la validación de mensajes
-
+```
 #INICIAR SERVIDOR
 ```
 $ node server/server_file.js
