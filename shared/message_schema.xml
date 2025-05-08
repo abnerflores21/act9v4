@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!-- Definición del tipo de mensaje -->
+  <xs:element name="message">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="userId" type="xs:string"/>
+        <xs:element name="username" type="xs:string"/>
+        <xs:element name="content" type="xs:string"/>
+        <xs:element name="timestamp" type="xs:string"/>
+        <xs:element name="type" type="messageType"/>
+        <xs:element name="targetUserId" type="xs:string" minOccurs="0"/>
+        <xs:element name="targetUsername" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Tipos de mensaje -->
+  <xs:simpleType name="messageType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CHAT"/>
+      <xs:enumeration value="JOIN"/>
+      <xs:enumeration value="LEAVE"/>
+      <xs:enumeration value="UNICAST"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Definición de usuario -->
+  <xs:element name="user">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="userId" type="xs:string"/>
+        <xs:element name="username" type="xs:string"/>
+        <xs:element name="connected" type="xs:boolean" minOccurs="0"/>
+        <xs:element name="lastActive" type="xs:string" minOccurs="0"/>
+        <xs:element name="joinedAt" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Lista de usuarios -->
+  <xs:element name="userList">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="user" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Respuesta de registro -->
+  <xs:element name="registerResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="success" type="xs:boolean"/>
+        <xs:element name="message" type="xs:string"/>
+        <xs:element name="userId" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

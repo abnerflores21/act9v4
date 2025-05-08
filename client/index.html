@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Web con RMI y WebSockets</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <h1><i class="fas fa-comments"></i> Chat Web</h1>
+            <div id="user-info">
+                <span id="current-user">No conectado</span>
+                <button id="logout-btn" class="btn">Salir</button>
+            </div>
+        </header>
+        
+        <!-- Área de login -->
+        <div id="login-area" class="login-container">
+            <div class="login-box">
+                <h2>Ingresar al Chat</h2>
+                <form id="login-form">
+                    <div class="form-control">
+                        <label for="username">Nombre de usuario</label>
+                        <input type="text" id="username" name="username" placeholder="Ingresa tu nombre..." required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Entrar al Chat</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Área principal del chat -->
+        <div id="chat-area" class="chat-main hidden">
+            <div class="chat-sidebar">
+                <h3><i class="fas fa-users"></i> Usuarios</h3>
+                <ul id="users-list">
+                    <!-- Lista dinámica de usuarios -->
+                </ul>
+            </div>
+            <div class="chat-messages" id="messages">
+                <!-- Mensajes del chat -->
+            </div>
+        </div>
+        
+        <div class="chat-form-container">
+            <!-- Selector de destinatario para mensajes privados -->
+            <div class="recipient-container">
+                <select id="recipient-select" class="recipient-select">
+                    <option value="all">Todos</option>
+                </select>
+            </div>
+            <form id="chat-form">
+                <input id="msg" type="text" placeholder="Escribe un mensaje..." required autocomplete="off" disabled />
+                <button class="btn" disabled><i class="fas fa-paper-plane"></i> Enviar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/socket_client.js"></script>
+    <script src="js/rmi_client.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
