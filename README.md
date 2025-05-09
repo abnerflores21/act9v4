@@ -12,7 +12,7 @@ $ npm install express http ws xml2js uuid fast-xml-parser
 Act9v4/
 │
 ├── server/
-│   ├── server.js             # Servidor principal (Node.js)
+│   ├── server_file.js             # Servidor principal (Node.js)
 │   ├── rmi_middleware.js     # Middleware RMI para las operaciones del chat
 │   ├── socket_handler.js     # Manejo de WebSockets
 │
