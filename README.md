@@ -1,6 +1,7 @@
 # act9v4
 
-IMPORTANTE: Este proyecto fue desarrollado en Ubuntu. No ha sido testeado en un entorno de Windows.
+# IMPORTANTE 
+Este proyecto fue desarrollado en Ubuntu. No ha sido testeado en un entorno de Windows.
 
 # INSTALACIÓN
 Es necesario instalar las siguientes librerías mediante el siguiente comando 'npm' en la terminal de cualquier versión que tengas de Linux:
@@ -12,7 +13,7 @@ $ npm install express http ws xml2js uuid fast-xml-parser
 Act9v4/
 │
 ├── server/
-│   ├── server_file.js             # Servidor principal (Node.js)
+│   ├── server_file.js        # Servidor principal (Node.js)
 │   ├── rmi_middleware.js     # Middleware RMI para las operaciones del chat
 │   ├── socket_handler.js     # Manejo de WebSockets
 │
