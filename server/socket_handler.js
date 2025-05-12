@@ -114,6 +114,8 @@ function handleConnection(ws) {
       // Notificar desconexión del usuario
       await rmiMiddleware.disconnectUser(userId);
     }
+    // Actualiza lista posterior a una desconexión
+    sendUserListUpdate();
   });
   
   // Manejar errores
