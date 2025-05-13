@@ -37,6 +37,17 @@ function subscribeToEvents() {
       broadcastMessage(xmlMessage);
     }
   });
+
+  // Nuevo: suscribirse al evento de error de mensaje privado
+  rmiMiddleware.chatEvents.on('private-message-error', (errorMessage) => {
+    const xmlMessage = rmiMiddleware.messageToXml(errorMessage);
+    
+    // Enviar solo al remitente
+    const senderWs = activeConnections.get(errorMessage.targetUserId);
+    if (senderWs && senderWs.readyState === senderWs.OPEN) {
+      senderWs.send(xmlMessage);
+    }
+  });
 }
 
 /**
@@ -70,12 +81,38 @@ function handleConnection(ws) {
           break;
           
         case 'PRIVATE':
-          // Procesar mensaje privado
-          await rmiMiddleware.sendPrivateMessage({
-            userId: message.userId,
-            targetUserId: message.targetUserId,
-            content: message.content
-          });
+         try {
+            // Procesar mensaje privado
+            await rmiMiddleware.sendPrivateMessage({
+              userId: message.userId,
+              targetUserId: message.targetUserId,
+              content: message.content
+            });
+          } catch (error) {
+            // Si el error es "Usuario destinatario no encontrado"
+            if (error.message === 'Usuario destinatario no encontrado') {
+              // Enviar mensaje de error al remitente
+              ws.send(rmiMiddleware.messageToXml({
+                userId: 'system',
+                username: 'Sistema',
+                content: 'El usuario destinatario ya no está conectado. Los mensajes nuevos se enviarán a todos los usuarios.',
+                timestamp: new Date().toISOString(),
+                type: 'ERROR'
+              }));
+              
+              // Enviar comando para resetear el destinatario
+              ws.send(rmiMiddleware.messageToXml({
+                userId: 'system',
+                username: 'Sistema',
+                content: 'RESET_RECIPIENT',
+                timestamp: new Date().toISOString(),
+                type: 'SYSTEM_COMMAND'
+              }));
+            } else {
+              // Reenviar cualquier otro error
+              throw error;
+            }
+          }
           break;
           
         case 'LOGOUT':
@@ -220,12 +257,37 @@ function sendPrivateMessage(xmlMessage, targetUserId, senderUserId) {
   const targetWs = activeConnections.get(targetUserId);
   if (targetWs && targetWs.readyState === targetWs.OPEN) {
     targetWs.send(xmlMessage);
-  }
-  
-  // Enviar una copia al remitente (para que vea lo que envió)
-  const senderWs = activeConnections.get(senderUserId);
-  if (senderWs && senderWs.readyState === senderWs.OPEN && senderUserId !== targetUserId) {
-    senderWs.send(xmlMessage);
+	// Enviar una copia al remitente (para que vea lo que envió)
+    const senderWs = activeConnections.get(senderUserId);
+    if (senderWs && senderWs.readyState === senderWs.OPEN && senderUserId !== targetUserId) {
+      senderWs.send(xmlMessage);
+    }
+  } else {
+    // El usuario destinatario no está conectado
+    const senderWs = activeConnections.get(senderUserId);
+    if (senderWs && senderWs.readyState === senderWs.OPEN) {
+      // Enviar mensaje de error al remitente
+      const errorMessage = {
+        userId: 'system',
+        username: 'Sistema',
+        content: 'El usuario destinatario no está conectado. Los mensajes nuevos se enviarán a todos los usuarios.',
+        timestamp: new Date().toISOString(),
+        type: 'ERROR'
+      };
+      
+      senderWs.send(rmiMiddleware.messageToXml(errorMessage));
+      
+      // Cambiar automáticamente al modo broadcast para este usuario en el cliente
+      const resetRecipientMessage = {
+        userId: 'system',
+        username: 'Sistema',
+        content: 'RESET_RECIPIENT', // Comando especial para resetear el destinatario
+        timestamp: new Date().toISOString(),
+        type: 'SYSTEM_COMMAND'
+      };
+      
+      senderWs.send(rmiMiddleware.messageToXml(resetRecipientMessage));
+    }
   }
 }
 
