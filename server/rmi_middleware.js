@@ -141,7 +141,7 @@ async function sendPrivateMessage(messageData) {
   // Buscar destinatario
   const target = users.get(messageData.targetUserId);
   if (!target) {
-    throw new Error('Usuario destinatario no encontrado');
+    throw new Error('Usuario destinatario no encontrado. Convirtiendo todos los mensajes a público.');
   }
   
   // Actualizar último acceso del remitente
