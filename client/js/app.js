@@ -182,20 +182,22 @@ function handleSendMessage(e) {
   
   // Determinar si es mensaje privado o público
   if (appState.selectedRecipient !== 'all') {
+    // Obtener el nombre del destinatario
+    const recipientUsername = recipientSelect.selectedOptions[0].text;
     // Enviar mensaje privado
     socketClient.sendPrivateMessage(msg, appState.selectedRecipient);
     
-    // Mostrar inmediatamente en la interfaz para el remitente
-    const recipientUsername = recipientSelect.selectedOptions[0].text;
-    handleIncomingMessage({
-      userId: appState.userId,
-      username: appState.username,
-      content: msg,
-      timestamp: new Date().toISOString(),
-      type: 'PRIVATE',
-      recipient: appState.selectedRecipient,
-      recipientUsername: recipientUsername
-    });
+    // Mostrar inmediatamente en la interfaz para el remitente (habilitando este bloque de código brickea el proyecto)
+    //const recipientUsername = recipientSelect.selectedOptions[0].text;
+    //handleIncomingMessage({
+      //userId: appState.userId,
+      //username: appState.username,
+      //content: msg,
+      //timestamp: new Date().toISOString(),
+      //type: 'PRIVATE',
+      //recipient: appState.selectedRecipient,
+      //recipientUsername: recipientUsername
+    //});
   } else {
     // Enviar mensaje público
     socketClient.sendMessage(msg);
@@ -245,6 +247,16 @@ function handleLogout() {
  * @param {Object} message - Mensaje recibido
  */
 function handleIncomingMessage(message) {
+  // Procesar comandos del sistema
+  if (message.type === 'SYSTEM_COMMAND') {
+    // Comando para resetear el destinatario a "todos"
+    if (message.content === 'RESET_RECIPIENT') {
+      recipientSelect.value = 'all';
+      recipientSelect.dispatchEvent(new Event('change'));
+      return; // No mostrar este mensaje en el chat
+    }
+  }
+
   // Crear elemento de mensaje
   const div = document.createElement('div');
   
@@ -259,12 +271,15 @@ function handleIncomingMessage(message) {
     // Mensaje privado
     div.classList.add('message', 'private');
     
+    // Asegurar que tengamos el nombre del destinatario
+    const recipientName = message.recipientUsername || message.targetUsername || 'usuario';
+    
     // Si es mensaje propio, añadir clase
     if (message.userId === appState.userId) {
       div.classList.add('self');
       div.innerHTML = `
         <p class="meta">
-          <span>Mensaje privado para ${message.recipientUsername}</span>
+          <span>Mensaje privado para ${message.targetUsername || "undefined"}</span>
           <span class="time">${formatTime(message.timestamp)}</span>
         </p>
         <p class="text">${message.content}</p>
@@ -278,6 +293,13 @@ function handleIncomingMessage(message) {
         <p class="text">${message.content}</p>
       `;
     }
+  } else if (message.type === 'ERROR') {
+    // Mensaje de error
+    div.classList.add('message', 'system', 'error');
+    div.innerHTML = `
+      <p class="text">${message.content}</p>
+      <p class="meta">${formatTime(message.timestamp)}</p>
+    `;
   } else {
     // Mensaje normal
     div.classList.add('message');
