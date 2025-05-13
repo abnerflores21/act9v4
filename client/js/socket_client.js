@@ -167,12 +167,18 @@ class SocketClient {
     if (!this.connected || !this.socket || this.socket.readyState !== WebSocket.OPEN) {
       return false;
     }
+
+    // Si no se proporciona targetUsername, intentar obtenerlo desde la interfaz de usuario
+	  if (!targetUsername && recipientSelect && recipientSelect.selectedOptions.length > 0) {
+		  targetUsername = recipientSelect.selectedOptions[0].text;
+	  }
     
     const message = {
       userId: this.userId,
       username: this.username,
       targetUserId: targetUserId,
       targetUsername: targetUsername,
+      recipientUsername: targetUsername,
       content: content,
       timestamp: new Date().toISOString(),
       type: 'PRIVATE'
