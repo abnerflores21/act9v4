@@ -141,8 +141,8 @@ async function sendPrivateMessage(messageData) {
   // Buscar destinatario
   const target = users.get(messageData.targetUserId);
   if (!target) {
-    throw new Error('Usuario destinatario no encontrado. Convirtiendo todos los mensajes a público.');
-  }
+    throw new Error('Usuario destinatario no encontrado.');
+    }
   
   // Actualizar último acceso del remitente
   sender.lastActive = new Date();
@@ -156,7 +156,7 @@ async function sendPrivateMessage(messageData) {
     content: messageData.content,
     timestamp: new Date().toISOString(),
     type: 'PRIVATE'
-  };
+  }; 
   
   // Guardar mensaje
   saveMessage(message);
