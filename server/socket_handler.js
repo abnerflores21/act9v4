@@ -7,6 +7,7 @@ const rmiMiddleware = require('./rmi_middleware');
 // Almacenamiento de conexiones activas
 const activeConnections = new Map(); // userId -> WebSocket
 
+
 /**
  * Inicializa el servidor WebSocket
  * @param {WebSocket.Server} wss - Servidor WebSocket
@@ -37,7 +38,7 @@ function subscribeToEvents() {
       broadcastMessage(xmlMessage);
     }
   });
-
+  
   // Nuevo: suscribirse al evento de error de mensaje privado
   rmiMiddleware.chatEvents.on('private-message-error', (errorMessage) => {
     const xmlMessage = rmiMiddleware.messageToXml(errorMessage);
@@ -81,7 +82,7 @@ function handleConnection(ws) {
           break;
           
         case 'PRIVATE':
-         try {
+          try {
             // Procesar mensaje privado
             await rmiMiddleware.sendPrivateMessage({
               userId: message.userId,
@@ -151,9 +152,12 @@ function handleConnection(ws) {
       // Notificar desconexión del usuario
       await rmiMiddleware.disconnectUser(userId);
     }
-    // Actualiza lista posterior a una desconexión
-    sendUserListUpdate();
+	
+	sendUserListUpdate();
+	
   });
+  
+
   
   // Manejar errores
   ws.on('error', (error) => {
