@@ -88,6 +88,9 @@ async function handleLogin(e) {
     return;
   }
   
+  // Limpiar cualquier error previo
+  clearLoginErrors();
+  
   // Mostrar indicador de carga
   usernameInput.disabled = true;
   loginForm.querySelector('button').disabled = true;
@@ -97,11 +100,14 @@ async function handleLogin(e) {
     await connectToChat(username);
   } catch (error) {
     console.error('Error al conectar al chat:', error);
+	
+	// Mostrar error con el nuevo sistema
+    displayLoginError(error.message || 'Error al conectar al chat');
     
     // Restaurar estado del formulario
-    usernameInput.disabled = false;
-    loginForm.querySelector('button').disabled = false;
-    loginForm.querySelector('button').textContent = 'Entrar al Chat';
+    //usernameInput.disabled = false;
+    //loginForm.querySelector('button').disabled = false;
+    //loginForm.querySelector('button').textContent = 'Entrar al Chat';
   }
 }
 
@@ -112,10 +118,15 @@ async function handleLogin(e) {
 function handleUsernameError(errorMessage) {
   displayError(errorMessage);
   
+  // Actualizar el evento para limpiar errores cuando se escribe en el input
+	usernameInput.addEventListener('input', () => {
+	clearLoginErrors();
+	});
+  
   // Restaurar estado del formulario de login
-  usernameInput.disabled = false;
-  loginForm.querySelector('button').disabled = false;
-  loginForm.querySelector('button').textContent = 'Entrar al Chat';
+  //usernameInput.disabled = false;
+  //loginForm.querySelector('button').disabled = false;
+  //loginForm.querySelector('button').textContent = 'Entrar al Chat';
 }
 
 /**
@@ -182,22 +193,27 @@ function handleSendMessage(e) {
   
   // Determinar si es mensaje privado o público
   if (appState.selectedRecipient !== 'all') {
-    // Obtener el nombre del destinatario
+	const recipientExists = appState.users.some(user => user.userId === appState.selectedRecipient);
+	
+	if(recipientExists){
+	// Obtener el nombre del destinatario
     const recipientUsername = recipientSelect.selectedOptions[0].text;
+	  
     // Enviar mensaje privado
-    socketClient.sendPrivateMessage(msg, appState.selectedRecipient);
+    socketClient.sendPrivateMessage(msg, appState.selectedRecipient, recipientUsername);
     
-    // Mostrar inmediatamente en la interfaz para el remitente (habilitando este bloque de código brickea el proyecto)
-    //const recipientUsername = recipientSelect.selectedOptions[0].text;
-    //handleIncomingMessage({
-      //userId: appState.userId,
-      //username: appState.username,
-      //content: msg,
-      //timestamp: new Date().toISOString(),
-      //type: 'PRIVATE',
-      //recipient: appState.selectedRecipient,
-      //recipientUsername: recipientUsername
-    //});
+	} else {
+      // El destinatario ya no está disponible, cambiar a broadcast
+      displayError('El usuario destinatario ya no está conectado. El mensaje se enviará a todos los usuarios.');
+      
+      // Resetear destinatario
+      recipientSelect.value = 'all';
+      appState.selectedRecipient = 'all';
+      messageInput.placeholder = 'Escribe un mensaje...';
+      
+      // Enviar como mensaje público
+      socketClient.sendMessage(msg);
+    }
   } else {
     // Enviar mensaje público
     socketClient.sendMessage(msg);
@@ -247,12 +263,13 @@ function handleLogout() {
  * @param {Object} message - Mensaje recibido
  */
 function handleIncomingMessage(message) {
-  // Procesar comandos del sistema
+	// Procesar comandos del sistema
   if (message.type === 'SYSTEM_COMMAND') {
     // Comando para resetear el destinatario a "todos"
     if (message.content === 'RESET_RECIPIENT') {
       recipientSelect.value = 'all';
-      recipientSelect.dispatchEvent(new Event('change'));
+      appState.selectedRecipient = 'all';
+      messageInput.placeholder = 'Escribe un mensaje...';
       return; // No mostrar este mensaje en el chat
     }
   }
@@ -270,8 +287,8 @@ function handleIncomingMessage(message) {
   } else if (message.type === 'PRIVATE') {
     // Mensaje privado
     div.classList.add('message', 'private');
-    
-    // Asegurar que tengamos el nombre del destinatario
+	
+	// Asegurar que tengamos el nombre del destinatario
     const recipientName = message.recipientUsername || message.targetUsername || 'usuario';
     
     // Si es mensaje propio, añadir clase
@@ -279,7 +296,7 @@ function handleIncomingMessage(message) {
       div.classList.add('self');
       div.innerHTML = `
         <p class="meta">
-          <span>Mensaje privado para ${message.targetUsername || "undefined"}</span>
+          <span>Mensaje privado para ${recipientName}</span>
           <span class="time">${formatTime(message.timestamp)}</span>
         </p>
         <p class="text">${message.content}</p>
@@ -398,8 +415,13 @@ function updateRecipientSelect(users) {
       recipientSelect.value = currentSelection;
     } else {
       recipientSelect.value = 'all';
+	  appState.selectedRecipient = 'all';
       // Actualizar placeholder del mensaje
       messageInput.placeholder = 'Escribe un mensaje...';
+	   // Solo mostrar notificación si teníamos un destinatario seleccionado que ya no está
+      if (currentSelection !== 'all') {
+        displayError('El usuario destinatario ya no está conectado. Los mensajes se enviarán a todos los usuarios.');
+      }
     }
   }
 }
@@ -484,3 +506,50 @@ function formatTime(timestamp) {
     return timestamp;
   }
 }
+
+/**
+ * Muestra un mensaje de error en la interfaz de login 
+ * @param {string} message - Mensaje de error a mostrar
+ */
+function displayLoginError(message) {
+  // Limpiar errores anteriores
+  clearLoginErrors();
+  
+  // Crear elemento de error
+  const errorDiv = document.createElement('div');
+  errorDiv.classList.add('login-error');
+  errorDiv.innerHTML = `
+    <i class="fas fa-exclamation-circle"></i>
+    <span>${message}</span>
+  `;
+  
+  // Insertar después del input de nombre
+  loginForm.insertBefore(errorDiv, loginForm.querySelector('button'));
+  
+  // Añadir clase de error al input
+  usernameInput.classList.add('input-error');
+  
+  // Restaurar estado del formulario
+  usernameInput.disabled = false;
+  loginForm.querySelector('button').disabled = false;
+  loginForm.querySelector('button').textContent = 'Entrar al Chat';
+  
+  // Enfocar el input
+  usernameInput.focus();
+}
+
+/**
+ * Limpia los mensajes de error del formulario de login
+ */
+function clearLoginErrors() {
+  // Eliminar mensajes de error
+  const existingErrors = loginForm.querySelectorAll('.login-error');
+  existingErrors.forEach(el => el.remove());
+  
+  // Quitar clase de error del input
+  usernameInput.classList.remove('input-error');
+}
+
+module.exports = {
+	updateRecipientSelect
+};
